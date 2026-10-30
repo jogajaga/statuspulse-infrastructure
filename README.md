@@ -18,6 +18,17 @@ CI/CD pipelines.
 - Provide a server overview dashboard.
 - Send service availability and recovery notifications.
 
+## Future security capabilities
+
+- Basic Linux security configuration checks.
+- Security update visibility.
+- SSH authentication event monitoring.
+- TLS certificate expiration alerts.
+- Actionable findings with evidence and remediation guidance.
+
+Security features will initially provide visibility and recommendations.
+Automated remediation is outside the initial scope.
+
 ## Current status
 
 - GitLab is configured for HTTP access within a private lab network.
