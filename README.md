@@ -1,3 +1,50 @@
+# StatusPulse Infrastructure
+
+Infrastructure automation for StatusPulse, an observability platform
+for small infrastructure environments.
+
+StatusPulse aims to bring server metrics, centralized logs, dashboards,
+and alerting into a unified experience.
+
+This repository currently provisions a self-hosted GitLab CE instance
+with Ansible. GitLab provides the foundation for the project's future
+CI/CD pipelines.
+
+## MVP goals
+
+- Onboard an Ubuntu server.
+- Collect CPU, memory, and disk usage metrics.
+- Collect and search system logs.
+- Provide a server overview dashboard.
+- Send service availability and recovery notifications.
+
+## Current status
+
+- GitLab is configured for HTTP access within a private lab network.
+- TLS, automated backups, and recovery testing are not implemented.
+- GitLab Runner and CI/CD pipelines are not configured.
+
+## Prerequisites
+
+### Control node
+
+- Ansible installed.
+- Git installed.
+- Network access to the target server.
+- A private SSH key authorized on the target server.
+
+### Target server
+
+- Ubuntu Server 22.04 LTS.
+- Python 3 installed.
+- OpenSSH Server configured and running.
+- A user with sudo privileges.
+- Internet access to download packages.
+
+The current lab uses a GitLab VM with 4 vCPUs, 6 GB RAM,
+and an 80 GB disk. This configuration has not been validated
+for production workloads.
+
 ## Getting started
 
 ### 1. Clone the repository
