@@ -1,0 +1,94 @@
+---
+- name: Install and configure GitLab CE
+  hosts: gitlab
+  become: true
+
+  vars:
+    gitlab_url: "http://192.168.217.130"
+    gitlab_ssh_port: 2498
+
+  pre_tasks:
+    - name: Check operating system
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == "Ubuntu"
+          - ansible_distribution_version == "22.04"
+        fail_msg: "This playbook requires Ubuntu 22.04."
+
+  tasks:
+    - name: Install dependencies
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - openssh-server
+          - tzdata
+          - perl
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create APT key directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Download GitLab repository signing key
+      ansible.builtin.get_url:
+        url: https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey
+        dest: /etc/apt/keyrings/gitlab-ce.asc
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Configure GitLab CE repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/gitlab-ce.asc]
+          https://packages.gitlab.com/gitlab/gitlab-ce/ubuntu/
+          jammy main
+        filename: gitlab-ce
+        state: present
+
+    - name: Install GitLab CE
+      ansible.builtin.apt:
+        name: gitlab-ce
+        state: present
+      environment:
+        EXTERNAL_URL: "{{ gitlab_url }}"
+
+    - name: Configure laboratory settings
+      ansible.builtin.blockinfile:
+        path: /etc/gitlab/gitlab.rb
+        owner: root
+        group: root
+        mode: "0600"
+        marker: "# {mark} ANSIBLE LAB CONFIG"
+        block: |
+          external_url '{{ gitlab_url }}'
+          gitlab_rails['gitlab_shell_ssh_port'] = {{ gitlab_ssh_port }}
+          letsencrypt['enable'] = false
+          prometheus_monitoring['enable'] = false
+          puma['worker_processes'] = 2
+      notify: Reconfigure GitLab
+
+    - name: Apply configuration before checking readiness
+      ansible.builtin.meta: flush_handlers
+
+    - name: Wait for GitLab readiness
+      ansible.builtin.uri:
+        url: "{{ gitlab_url }}/-/readiness"
+        status_code: 200
+        return_content: false
+      register: gitlab_readiness
+      until: gitlab_readiness.status | default(0) == 200
+      retries: 60
+      delay: 10
+      
+  handlers:
+    - name: Reconfigure GitLab
+      ansible.builtin.command: gitlab-ctl reconfigure
+      changed_when: true
