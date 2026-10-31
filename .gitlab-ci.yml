@@ -8,6 +8,6 @@ runner-smoke-test:
     - docker
   script:
     - echo "StatusPilse CI runner is working"
-    - cat /ets/os-release
+    - cat /etc/os-release
     - test -d "$CI_PROJECT_DIR/.git"
     - echo "Repository checkout succeeded"
