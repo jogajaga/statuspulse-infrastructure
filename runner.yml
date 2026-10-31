@@ -1,0 +1,52 @@
+---
+- name: Install GitLab Runner with Docker executor dependencies
+  hosts: gitlab
+  become: true
+
+  tasks:
+    - name: Install Docker and repository dependencies
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - ca-certificates
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Start Docker
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Create APT key directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download GitLab Runner repository key
+      ansible.builtin.get_url:
+        url: https://packages.gitlab.com/runner/gitlab-runner/gpgkey
+        dest: /etc/apt/keyrings/gitlab-runner.asc
+        mode: "0644"
+
+    - name: Configure GitLab Runner repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/gitlab-runner.asc]
+          https://packages.gitlab.com/runner/gitlab-runner/ubuntu/
+          jammy main
+        filename: gitlab-runner
+        state: present
+
+    - name: Install GitLab Runner
+      ansible.builtin.apt:
+        name: gitlab-runner
+        state: present
+
+    - name: Start GitLab Runner
+      ansible.builtin.systemd:
+        name: gitlab-runner
+        enabled: true
+        state: started

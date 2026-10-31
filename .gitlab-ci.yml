@@ -1,0 +1,13 @@
+stages:
+  - verify
+
+runner-smoke-test:
+  stage: verify
+  image: alpine:3.22
+  tags:
+    - docker
+  script:
+    - echo "StatusPilse CI runner is working"
+    - cat /ets/os-release
+    - test -d "$CI_PROJECT_DIR/.git"
+    - echo "Repository checkout succeeded"
